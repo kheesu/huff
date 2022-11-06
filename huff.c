@@ -61,6 +61,8 @@ int main(int argc, char** argv) {
     text = fopen(argv[1], "rb");                //Probably unsafe
     write(text, "compressed");
     fclose(text);
+    FILE *comp = fopen("compressed", "rb");
+    decomp(comp, *hufftree, "compdecomp");
     return 0;
 }
 
@@ -403,8 +405,8 @@ void write(FILE *in, char *name) {
 
         for(int i = 0; i < size; i++) {
             char *code = encodetable[(unsigned char)buff[i]];
-            for(int i = 0; code[i]; i++) {
-                if(code[i] == '1')
+            for(int j = 0; code[j]; j++) {
+                if(code[j] == '1')
                     outbyte = outbyte|(1<<(7 - bitpos));
                 bitpos++;
                 if(bitpos == 8) {
@@ -420,5 +422,44 @@ void write(FILE *in, char *name) {
         fputc(outbyte, out);
     
     fclose(out);
+    free(buff);
+}
+
+void decomp(FILE *in, node *hufftree, char *name) {
+    errno = 0;
+    FILE *out = fopen(name, "wb");
+    if(errno != 0) {
+        FREADERR();
+    }
+    size_t size;
+
+    unsigned char* buff = calloc(sizeof(char), BUFFSIZE);
+    if(buff == NULL) {
+        MEMALLOCERR();
+    }
+
+    int bitpos = 0;
+    unsigned char c;
+    node *hp = hufftree;
+    do{
+        size = fread(buff, sizeof(char), BUFFSIZE, in);
+        if(ferror(in)) {
+            FREADERR();
+        } 
+        for(int i = 0; i < size; i++) {
+            c = buff[i];
+            for(int j = 0; j < 8; j++) {
+                if(c & 128) hp = hp->right;
+                else hp = hp->left;
+                
+                if(hp->ele) {
+                    fputc(hp->ele, out);
+                    hp = hufftree;
+                }
+                c = c<<1;
+            }
+        }
+    }
+    while(size == BUFFSIZE);
     free(buff);
 }
