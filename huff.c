@@ -14,13 +14,19 @@ void char_dist(FILE* in) {                   //Finds out distribution of charact
 
     do{
         size = fread(buff, sizeof(char), BUFFSIZE, in);
+
+        if(size == 0) {
+            printf("shc: Empty file detected: Compression not neccessary\n");
+            exit(0);
+        }
+
         fsize += size;
         if(ferror(in)) {
             FREADERR();
         } 
         for(int i = 0; i < size; i++) {
             if((unsigned char)buff[i] > MAXCHAR) {
-                fprintf(stderr, "Non ASCII input detected. Exiting...\n");
+                fprintf(stderr, "shc: Non ASCII input detected\n");
                 exit(-1);
             }
             freqtable[(unsigned char)buff[i]]++;
