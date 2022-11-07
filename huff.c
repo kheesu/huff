@@ -1,70 +1,8 @@
 #include "huff.h"
-
-//Globals
-unsigned int freqtable[MAXCHAR] = {0};
-char *encodetable[MAXCHAR] = {0};
-unsigned long long int number = 0;
-
-int main(int argc, char** argv) {
-    if(argc == 1) {
-        fprintf(stderr, "Provide input file as argument. Exiting...\n");
-        exit(0);
-    }
-    FILE* text;
-    errno = 0;
-    text = fopen(argv[1], "rb");                //Probably unsafe
-    if(errno != 0) {
-        FREADERR();
-    }
-
-    char_dist(text);
-    fclose(text);
-    unsigned int unique_characters = 0;
-    for(int i = 0; i < MAXCHAR; i++) {
-        if(freqtable[i] != 0) unique_characters++;
-    }
-
-    freqdict * dict = calloc(unique_characters, sizeof(freqdict));
-    if(dict == NULL) {
-        MEMALLOCERR();
-    }
-    size_t dictlen = unique_characters;
-    
-    for(int i = 0, j = 0; i < MAXCHAR; i++) {                           //Create dictionary of used chararcters
-        if(freqtable[i] != 0) {
-            dict[j].ele = i;
-            dict[j++].freq = freqtable[i];
-        }
-    }
-
-    minheap(dict, dictlen, sizeof(freqdict), *freqcmp);
-
-    node **hufftree = calloc(unique_characters * 2, sizeof(node*));
-    if(hufftree == NULL) {
-        MEMALLOCERR();
-    }
-    size_t htsize = 0;
-    //printf("%d\n", htsize);
-    buildht(dict, &dictlen, hufftree, &htsize);
-    //printf("%d\n", htsize);
-
-    //printf("%d %d %d\n",hufftree[0]->key, hufftree[0]->left->key, hufftree[0]->right->key);
-    //treecheck(*hufftree);
-    //return 0;
-    char *code = calloc(MAXHCODE, sizeof(char));                    
-    unsigned int len = 0;
-    encode(*hufftree, code, len);
-    //printf("mark\n");
-
-    for(int i = 0; i < MAXCHAR; i++) printf("%d %s\n", i, encodetable[i]);
-
-    text = fopen(argv[1], "rb");                //Probably unsafe
-    write(text, "compressed");
-    fclose(text);
-    FILE *comp = fopen("compressed", "rb");
-    decomp(comp, *hufftree, "compdecomp");
-    return 0;
-}
+extern unsigned int freqtable[MAXCHAR];
+extern char *encodetable[MAXCHAR];
+extern unsigned long long int number;
+extern unsigned long long fsize;
 
 void char_dist(FILE* in) {                   //Finds out distribution of characters in file
     size_t size;
@@ -76,6 +14,7 @@ void char_dist(FILE* in) {                   //Finds out distribution of charact
 
     do{
         size = fread(buff, sizeof(char), BUFFSIZE, in);
+        fsize += size;
         if(ferror(in)) {
             FREADERR();
         } 
@@ -116,100 +55,6 @@ node *newsubtree() {
     return p;
 }
 
-void buildhufftree(freqdict *arr0, size_t *size0, node *arr1, size_t *size1) {
-    while(1) {
-        if(*size0 > 0 && *size1 > 0) {
-            node *p = newsubtree();
-            unsigned int newfreq = 0;
-
-            freqdict *temp0;
-            node *temp1;
-
-            if(arr0[0].freq <= arr1[0].key) {
-                temp0 = extract(arr0, size0, sizeof(freqdict), *freqcmp);
-                p->left->key = temp0->freq;
-                p->left->ele = temp0->ele;
-                newfreq += temp0->freq;
-            }
-            else {
-                free(p->left);
-                temp1 = extract(arr1, size1, sizeof(node), *nodecmp);
-
-                p->left = temp1;
-                newfreq += temp1->key;
-            }
-
-            if(*size0 > 0 && *size1 > 0) {
-                if(arr0[0].freq <= arr1[0].key) {
-                    temp0 = extract(arr0, size0, sizeof(freqdict), *freqcmp);
-                    p->right->key = temp0->freq;
-                    p->right->ele = temp0->ele;
-                    newfreq += temp0->freq;
-                }
-                else {
-                    free(p->right);
-                    temp1 = extract(arr1, size1, sizeof(node), *nodecmp);
-
-                    p->right = temp1;
-                    newfreq += temp1->key;
-                }
-            }
-            else {
-                free(p->right);
-                temp1 = extract(arr1, size1, sizeof(node), *nodecmp);
-
-                p->right = temp1;
-                newfreq += temp1->key;
-            }
-
-            p->key = newfreq;
-            insert(arr1, size1, sizeof(node), *nodecmp, p);
-            
-        }
-        else if(*size0 == 0) {
-            if(*size1 == 1) break;
-
-            node *p = calloc(1, sizeof(node));
-            if(p == NULL) {
-                MEMALLOCERR();
-            }
-            
-            unsigned int newfreq = 0;
-
-            node* temp = extract(arr1, size1, sizeof(node), *nodecmp);
-            p->left = temp;
-            newfreq += temp->key;
-
-            temp = extract(arr1, size1, sizeof(node), *nodecmp);
-            p->right = temp;
-            newfreq += temp->key;
-
-            p->key = newfreq;
-            
-            insert(arr1, size1, sizeof(node), *nodecmp, p);
-        }
-        else if(*size1 == 0) {
-            node *p = newsubtree();
-            
-            unsigned int newfreq = 0;
-
-            freqdict *temp = extract(arr0, size0, sizeof(freqdict), *freqcmp);
-            p->left->key = temp->freq;
-            p->left->ele = temp->ele;
-            newfreq += temp->freq;
-
-            temp = extract(arr0, size0, sizeof(freqdict), *freqcmp);
-            p->right->key = temp->freq;
-            p->right->ele = temp->ele;
-            newfreq += temp->freq;
-
-            p->key = newfreq;
-
-            insert(arr1, size1, sizeof(node), *nodecmp, p);
-        }
-    }
-}
-
 void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
     freqdict *fdtemp0, *fdtemp1;
     node **ntemp0, **ntemp1;
@@ -218,8 +63,8 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
         if(*size0 == 0) {
             if(*size1 == 1) return;
 
-            ntemp0 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
-            ntemp1 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
+            ntemp0 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
+            ntemp1 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
             node *new = calloc(1, sizeof(node));
 
@@ -227,7 +72,7 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
             new->right = *ntemp1;
             new->key = new->left->key + new->right->key;
 
-            insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+            ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
         }
         else if(*size1 == 0) {
             fdtemp0 = extract(arr0, size0, sizeof(freqdict), *freqcmp);
@@ -236,12 +81,14 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
             node *new = newsubtree();
 
             new->left->ele = fdtemp0->ele;
+            new->left->isleaf = 1;
             new->left->key = fdtemp0->freq;
             new->right->ele = fdtemp1->ele;
+            new->right->isleaf = 1;
             new->right->key = fdtemp1->freq;
             new->key = fdtemp0->freq + fdtemp1->freq;
 
-            insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+            ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
         }
         else {
             //for(int i = 0; i < *size1; i++) printf("%d %d\n", arr1[i]->key, arr1[i]->ele);
@@ -255,43 +102,47 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                         node *new = newsubtree();
 
                         new->left->ele = fdtemp0->ele;
+                        new->left->isleaf = 1;
                         new->left->key = fdtemp0->freq;
                         new->right->ele = fdtemp1->ele;
+                        new->right->isleaf = 1;
                         new->right->key = fdtemp1->freq;
                         new->key = fdtemp0->freq + fdtemp1->freq;
 
-                        insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                        ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                     }
                     else {
-                        ntemp0 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
+                        ntemp0 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
                         node *new = newsubtree();
                         free(new->right);
 
                         new->left->ele = fdtemp0->ele;
+                        new->left->isleaf = 1;
                         new->left->key = fdtemp0->freq;
                         new->right = *ntemp0;
                         new->key = fdtemp0->freq + new->right->key;
 
-                        insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                        ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                     }
                 }
                 else {
-                    ntemp0 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
+                    ntemp0 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
                     node *new = newsubtree();
                     free(new->right);
 
                     new->left->ele = fdtemp0->ele;
+                    new->left->isleaf = 1;
                     new->left->key = fdtemp0->freq;
                     new->right = *ntemp0;
                     new->key = new->left->key + new->right->key;
 
-                    insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                    ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                 }
             }
             else {
-                ntemp0 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
+                ntemp0 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
                 if(*size1 > 0) {
                     if(arr0[0].freq <= arr1[0]->key) {
@@ -301,14 +152,15 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                         free(new->left);
 
                         new->right->ele = fdtemp0->ele;
+                        new->right->isleaf = 1;
                         new->right->key = fdtemp0->freq;
                         new->left = *ntemp0;
                         new->key = fdtemp0->freq + new->left->key;
 
-                        insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                        ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                     }
                     else {
-                        ntemp1 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
+                        ntemp1 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
                         node *new = calloc(1, sizeof(node));
                         if(new == NULL) {
@@ -319,7 +171,7 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                         new->right = *ntemp1;
                         new->key = new->left->key + new->right->key;
 
-                        insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                        ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                     }
                 }
                 else {
@@ -329,11 +181,12 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                     free(new->left);
 
                     new->right->ele = fdtemp0->ele;
+                    new->right->isleaf = 1;
                     new->right->key = fdtemp0->freq;
                     new->left = *ntemp0;
                     new->key = new->right->key + new->left->key;
 
-                    insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                    ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                 }
             }
         }
@@ -346,7 +199,7 @@ void encode(node *hufftree, char *code, unsigned int len) {
         fprintf(stderr, "Code exceeds limit. Aborting...\n");
         exit(-1);
     }
-    if(hufftree->ele) {
+    if(hufftree->isleaf) {
         code[len] = '\0';
         encodetable[hufftree->ele] = code;
         return;
@@ -373,7 +226,7 @@ void encode(node *hufftree, char *code, unsigned int len) {
 void treecheck(node *hufftree) {
     if(hufftree == NULL) return;
     if(hufftree->ele) {
-        printf("%d\n",number++);
+        printf("%lld\n",number++);
         
         return;
     }
@@ -381,13 +234,18 @@ void treecheck(node *hufftree) {
     treecheck(hufftree->right);
 }
 
-void write(FILE *in, char *name) {
+void comp(FILE *in, char *name) {
+    
     errno = 0;
     FILE *out = fopen(name, "wb");
     if(errno != 0) {
         FREADERR();
     }
 
+    const unsigned char identifier[5] = {7, 'S', 'H', 'C', (unsigned char)MAXCHAR};
+    fwrite(identifier, sizeof(unsigned char), 5, out);
+    fwrite(&fsize, sizeof(unsigned long long), 1, out);
+    fwrite(freqtable, sizeof(int), MAXCHAR, out);
     size_t size;
 
     char* buff = calloc(sizeof(char), BUFFSIZE);
@@ -418,19 +276,37 @@ void write(FILE *in, char *name) {
         }
     }
     while(size == BUFFSIZE);
-    if(outbyte)
+
+    if(bitpos){
         fputc(outbyte, out);
-    
+    }
+
     fclose(out);
     free(buff);
 }
 
-void decomp(FILE *in, node *hufftree, char *name) {
+void decomp(FILE *in, char *name) {
     errno = 0;
     FILE *out = fopen(name, "wb");
     if(errno != 0) {
         FREADERR();
     }
+    unsigned char identifier[5] = {0};
+    fread(identifier, sizeof(unsigned char), 5, in);
+    if(identifier[0] != 7 && identifier[1] != 'S' && identifier[2] != 'H' && identifier[3] != 'C') {
+        fprintf(stderr, "shc: Incorrect file format\n");
+        exit(-1);
+    }
+
+    int maxchar;
+    if(identifier[4] == 0) maxchar = 256;
+    else maxchar = 128;
+
+    fread(&fsize, sizeof(unsigned long long), 1, in);
+
+    fread(freqtable, sizeof(unsigned int), maxchar, in);
+
+    node *hufftree = tbltoht();
     size_t size;
 
     unsigned char* buff = calloc(sizeof(char), BUFFSIZE);
@@ -438,7 +314,6 @@ void decomp(FILE *in, node *hufftree, char *name) {
         MEMALLOCERR();
     }
 
-    int bitpos = 0;
     unsigned char c;
     node *hp = hufftree;
     do{
@@ -452,8 +327,9 @@ void decomp(FILE *in, node *hufftree, char *name) {
                 if(c & 128) hp = hp->right;
                 else hp = hp->left;
                 
-                if(hp->ele) {
+                if(hp->isleaf) {
                     fputc(hp->ele, out);
+                    if(!--fsize) break;
                     hp = hufftree;
                 }
                 c = c<<1;
@@ -462,4 +338,35 @@ void decomp(FILE *in, node *hufftree, char *name) {
     }
     while(size == BUFFSIZE);
     free(buff);
+}
+
+node *tbltoht() {
+    unsigned int unique_characters = 0;
+    for(int i = 0; i < MAXCHAR; i++) {
+        if(freqtable[i] != 0) unique_characters++;
+    }
+
+    freqdict * dict = calloc(unique_characters, sizeof(freqdict));
+    if(dict == NULL) {
+        MEMALLOCERR();
+    }
+    size_t dictlen = unique_characters;
+    
+    for(int i = 0, j = 0; i < MAXCHAR; i++) {                           //Create dictionary of used chararcters
+        if(freqtable[i] != 0) {
+            dict[j].ele = i;
+            dict[j++].freq = freqtable[i];
+        }
+    }
+
+    minheap(dict, dictlen, sizeof(freqdict), *freqcmp);
+
+    node **hufftree = calloc(unique_characters * 2, sizeof(node*));
+    if(hufftree == NULL) {
+        MEMALLOCERR();
+    }
+    size_t htsize = 0;
+    buildht(dict, &dictlen, hufftree, &htsize);
+
+    return *hufftree;
 }

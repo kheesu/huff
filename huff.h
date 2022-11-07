@@ -19,11 +19,11 @@
 #endif
 
 #define MEMALLOCERR() {\
-fprintf(stderr, "Failed to allocate memory. Exiting...\n");\
+fprintf(stderr, "sbc: Failed to allocate memory. \n");\
 exit(-1);\
 }
 #define FREADERR() {\
-fprintf(stderr, "Failed to read file. Exiting...\n");\
+fprintf(stderr, "sbc: Failed to read file.\n");\
 exit(-1);\
 }
 
@@ -39,6 +39,7 @@ typedef struct node
     struct node *left;
     struct node *right;
     unsigned char ele;
+    char isleaf;
 }node;
 
 /*
@@ -61,6 +62,10 @@ void minheap(void *arr, size_t size, size_t bytes, int (*cmp)(const void*, const
 void *extract(void *arr, size_t *size, size_t bytes, int(*cmp)(const void*, const void*));
 void insert(void *arr, size_t *size, size_t bytes, int(*cmp)(const void*, const void*), void* new);
 void hsort(void *arr, size_t size, size_t bytes, int(*cmp)(const void*, const void*));
+void ptrheapify(void *arr, size_t size, size_t bytes, int (*cmp)(const void**, const void**), unsigned int i);
+void ptrminheap(void *arr, size_t size, size_t bytes, int (*cmp)(const void**, const void**));
+void *ptrextract(void *arr, size_t *size, size_t bytes, int(*cmp)(const void**, const void**));
+void ptrinsert(void *arr, size_t *size, size_t bytes, int(*cmp)(const void**, const void**), void* new);
 
 void char_dist(FILE* in);
 node *newsubtree();
@@ -68,4 +73,6 @@ void buildhufftree(freqdict *arr0, size_t *size0, node *arr1, size_t *size1);
 void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1);
 void encode(node *hufftree, char *code, unsigned int len);
 void treecheck(node *hufftree);
-void write(FILE *in, char *name);
+void comp(FILE *in, char *name);
+void decomp(FILE *in, char *name);
+node *tbltoht();

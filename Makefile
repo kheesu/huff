@@ -1,12 +1,12 @@
 CC=gcc
 CCFLAGS= -Wall -g -I.
 HEAD = huff.h
-O = huff.o heap.o 
+O = main.o huff.o heap.o 
 
 %.o: %.c $(DEPS)
 	$(CC) -c -o $@ $< $(CCFLAGS)
 
-huff: $(O)
+shc: $(O)
 	$(CC) -o $@ $^ $(CCFLAGS)
 
 .PHONY: clean
