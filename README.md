@@ -34,7 +34,7 @@ a1e490b38837162d2b83fea611c6c868  example2.txt
 
 ## Details on file header
 
-Magic numbers are `07 53 48 43` (^G S H C) which are followed by 0 or 128 depending on compile options.
+Magic numbers are `0x07 0x53 0x48 0x43` (^G S H C) which are followed by `0x00` or `0x80` depending on compile options.
 
 After the initial 5 bytes follows the size of the uncompressed file in bytes stored over 8 bytes. 
 
