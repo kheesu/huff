@@ -3,6 +3,10 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+#ifdef _WIN32
+#include <io.h>
+#include <fcntl.h>
+#endif
 
 #ifdef ASCIIONLY
 #define MAXCHAR 128
@@ -64,6 +68,7 @@ void insert(void *arr, size_t *size, size_t bytes, int(*cmp)(const void*, const 
 void hsort(void *arr, size_t size, size_t bytes, int(*cmp)(const void*, const void*));
 
 void char_dist(FILE* in);
+void stdin_char_dist(FILE *temp);
 node *newsubtree();
 void buildhufftree(freqdict *arr0, size_t *size0, node *arr1, size_t *size1);
 void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1);

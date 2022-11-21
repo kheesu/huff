@@ -14,13 +14,13 @@ void char_dist(FILE* in) {                   //Finds out distribution of charact
 
     do{
         size = fread(buff, sizeof(char), BUFFSIZE, in);
+        fsize += size;
 
-        if(size == 0) {
-            printf("shc: Empty file detected: Compression not neccessary\n");
+        if(fsize == 0) {
+            fprintf(stderr, "shc: Empty file detected: Compression not neccessary\n");
             exit(0);
         }
 
-        fsize += size;
         if(ferror(in)) {
             FREADERR();
         } 
@@ -33,6 +33,36 @@ void char_dist(FILE* in) {                   //Finds out distribution of charact
         }
     }
     while(size == BUFFSIZE);
+    free(buff);
+}
+
+void stdin_char_dist(FILE *temp) {
+    size_t size;
+
+    char* buff = calloc(sizeof(char), BUFFSIZE);
+    if(buff == NULL) {
+        MEMALLOCERR();
+    }
+
+    do{
+        size = fread(buff, sizeof(char), BUFFSIZE, stdin);
+        fwrite(buff, sizeof(char), size, temp);
+        fsize += size;
+
+        if(fsize == 0) {
+            fprintf(stderr, "shc: Empty input detected: Compression not neccessary\n");
+            exit(0);
+        }
+        for(int i = 0; i < size; i++) {
+            if((unsigned char)buff[i] > MAXCHAR) {
+                fprintf(stderr, "shc: Non ASCII input detected\n");
+                exit(-1);
+            }
+            freqtable[(unsigned char)buff[i]]++;
+        }
+    }
+    while(size == BUFFSIZE);
+    rewind(temp);
     free(buff);
 }
 
@@ -228,18 +258,19 @@ void encode(node *hufftree, char *code, unsigned int len) {
     new1[len] = '1';
     encode(hufftree->right, new1, len + 1);
 }
-
+/*
+//Debug function that... checks trees
 void treecheck(node *hufftree) {
     if(hufftree == NULL) return;
     if(hufftree->ele) {
-        printf("%lld\n",number++);
+        printf("%llu\n",number++);
         
         return;
     }
     treecheck(hufftree->left);
     treecheck(hufftree->right);
 }
-
+*/
 void comp(FILE *in, char *name) {
     
     errno = 0;
@@ -292,11 +323,21 @@ void comp(FILE *in, char *name) {
 }
 
 void decomp(FILE *in, char *name) {
-    errno = 0;
-    FILE *out = fopen(name, "wb");
-    if(errno != 0) {
-        FREADERR();
+    FILE *out;
+    if(name) {                              //Checks if name is null pointer, if so set out to stdout
+        errno = 0;
+        out = fopen(name, "wb");
+        if(errno != 0) {
+            FREADERR();
+        }
     }
+    else {
+        #ifdef _WIN32
+        _setmode(_fileno(stdout), _O_BINARY);
+        #endif
+        out = stdout;
+    }
+    
     unsigned char identifier[5] = {0};
     fread(identifier, sizeof(unsigned char), 5, in);
     if(identifier[0] != 7 && identifier[1] != 'S' && identifier[2] != 'H' && identifier[3] != 'C') {
