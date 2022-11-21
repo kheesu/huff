@@ -56,16 +56,12 @@ typedef struct heapargs {
 void swap(void * a, void* b, size_t bytes);
 int freqcmp(const void *pa, const void *pb);
 int nodecmp(const void *pa, const void *pb);
-int nodeptrcmp(const void **pa, const void **pb);
+int nodeptrcmp(const void *pa, const void *pb);
 void heapify(void *arr, size_t size, size_t bytes, int (*cmp)(const void*, const void*), unsigned int i);
 void minheap(void *arr, size_t size, size_t bytes, int (*cmp)(const void*, const void*));
 void *extract(void *arr, size_t *size, size_t bytes, int(*cmp)(const void*, const void*));
 void insert(void *arr, size_t *size, size_t bytes, int(*cmp)(const void*, const void*), void* new);
 void hsort(void *arr, size_t size, size_t bytes, int(*cmp)(const void*, const void*));
-void ptrheapify(void *arr, size_t size, size_t bytes, int (*cmp)(const void**, const void**), unsigned int i);
-void ptrminheap(void *arr, size_t size, size_t bytes, int (*cmp)(const void**, const void**));
-void *ptrextract(void *arr, size_t *size, size_t bytes, int(*cmp)(const void**, const void**));
-void ptrinsert(void *arr, size_t *size, size_t bytes, int(*cmp)(const void**, const void**), void* new);
 
 void char_dist(FILE* in);
 node *newsubtree();

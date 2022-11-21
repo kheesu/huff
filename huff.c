@@ -69,8 +69,8 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
         if(*size0 == 0) {
             if(*size1 == 1) return;
 
-            ntemp0 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
-            ntemp1 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
+            ntemp0 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
+            ntemp1 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
             node *new = calloc(1, sizeof(node));
 
@@ -78,7 +78,7 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
             new->right = *ntemp1;
             new->key = new->left->key + new->right->key;
 
-            ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+            insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
         }
         else if(*size1 == 0) {
             fdtemp0 = extract(arr0, size0, sizeof(freqdict), *freqcmp);
@@ -94,7 +94,7 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
             new->right->key = fdtemp1->freq;
             new->key = fdtemp0->freq + fdtemp1->freq;
 
-            ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+            insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
         }
         else {
             //for(int i = 0; i < *size1; i++) printf("%d %d\n", arr1[i]->key, arr1[i]->ele);
@@ -115,10 +115,10 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                         new->right->key = fdtemp1->freq;
                         new->key = fdtemp0->freq + fdtemp1->freq;
 
-                        ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                        insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                     }
                     else {
-                        ntemp0 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
+                        ntemp0 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
                         node *new = newsubtree();
                         free(new->right);
@@ -129,11 +129,11 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                         new->right = *ntemp0;
                         new->key = fdtemp0->freq + new->right->key;
 
-                        ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                        insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                     }
                 }
                 else {
-                    ntemp0 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
+                    ntemp0 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
                     node *new = newsubtree();
                     free(new->right);
@@ -144,11 +144,11 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                     new->right = *ntemp0;
                     new->key = new->left->key + new->right->key;
 
-                    ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                    insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                 }
             }
             else {
-                ntemp0 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
+                ntemp0 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
                 if(*size1 > 0) {
                     if(arr0[0].freq <= arr1[0]->key) {
@@ -163,10 +163,10 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                         new->left = *ntemp0;
                         new->key = fdtemp0->freq + new->left->key;
 
-                        ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                        insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                     }
                     else {
-                        ntemp1 = ptrextract(arr1, size1, sizeof(node*), *nodeptrcmp);
+                        ntemp1 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
 
                         node *new = calloc(1, sizeof(node));
                         if(new == NULL) {
@@ -177,7 +177,7 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                         new->right = *ntemp1;
                         new->key = new->left->key + new->right->key;
 
-                        ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                        insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                     }
                 }
                 else {
@@ -192,7 +192,7 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
                     new->left = *ntemp0;
                     new->key = new->right->key + new->left->key;
 
-                    ptrinsert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
+                    insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
                 }
             }
         }
