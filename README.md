@@ -12,7 +12,9 @@ Windows: Edit Makefile to use a cross compiler or compile it directly on a Windo
 
 Use -c flag to compress
 
-Use -d flag to decompress
+Use - to compress from stdin
+
+Use -d flag to decompress and add -stdout in place of output file name to output to stdout
 
 ```
 hsu@TREEHOUSE:~$ ls -l
@@ -30,6 +32,26 @@ hsu@TREEHOUSE:~$ md5sum example.txt
 a1e490b38837162d2b83fea611c6c868  example.txt
 hsu@TREEHOUSE:~$ md5sum example2.txt 
 a1e490b38837162d2b83fea611c6c868  example2.txt
+```
+
+```
+hsu@TREEHOUSE:~$ ls -l
+total 12
+-rw-r--r-- 1 hsu hsu  385 Nov 21 18:42 file0
+-rw-r--r-- 1 hsu hsu  635 Nov 21 18:42 file1
+drwxr-xr-x 9 hsu hsu 4096 Nov 21 13:11 source
+hsu@TREEHOUSE:~$ tar -c file0 file1 --remove-files | shc - files.tar.shc
+hsu@TREEHOUSE:~$ ls -l
+total 8
+-rw-r--r-- 1 hsu hsu 2982 Nov 21 18:43 files.tar.shc
+drwxr-xr-x 9 hsu hsu 4096 Nov 21 13:11 source
+hsu@TREEHOUSE:~$ shc -d files.tar.shc -stdout | tar -x
+hsu@TREEHOUSE:~$ ls -l
+total 16
+-rw-r--r-- 1 hsu hsu  385 Nov 21 18:42 file0
+-rw-r--r-- 1 hsu hsu  635 Nov 21 18:42 file1
+-rw-r--r-- 1 hsu hsu 2982 Nov 21 18:43 files.tar.shc
+drwxr-xr-x 9 hsu hsu 4096 Nov 21 13:11 source
 ```
 
 ## Details on file header
