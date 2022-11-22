@@ -417,3 +417,103 @@ node *tbltoht() {
 
     return *hufftree;
 }
+
+//primary fuction
+void drawhufftree(FILE *in)
+{
+    unsigned char identifier[5] = {0};
+    fread(identifier, sizeof(unsigned char), 5, in);
+    if(identifier[0] != 7 && identifier[1] != 'S' && identifier[2] != 'H' && identifier[3] != 'C') {
+        fprintf(stderr, "shc: Incorrect file format\n");
+        exit(-1);
+    }
+
+    int maxchar;
+    if(identifier[4] == 0) maxchar = 256;
+    else maxchar = 128;
+
+    fread(&fsize, sizeof(unsigned long long), 1, in);
+
+    fread(freqtable, sizeof(unsigned int), maxchar, in);
+
+    node *tree = tbltoht();
+
+    // should check if we don't exceed this somehow..
+    char path[255] = {};
+    int inputdepth = 5;
+    printf("input the depth of the tree : ");
+    scanf("%d", &inputdepth);
+    if(inputdepth == -1) inputdepth = __INT32_MAX__;
+    
+    //initial depth is 0
+    treeprint(tree, 0, path, 0, inputdepth);
+}
+
+void treeprint(node *hufftree, int depth, char *path, int right, int inputdepth)
+{
+    // stopping condition
+    if (inputdepth == depth){
+        return;
+    }
+    if (hufftree == NULL){
+        return;
+    }
+
+    // increase spacing
+    depth++;
+
+    // start with right node
+    treeprint(hufftree->right, depth, path, 1, inputdepth);
+
+    if(depth > 1)
+    {
+        // set | draw map
+        path[depth-2] = 0;
+
+        if(right)
+            path[depth-2] = 1;
+    }
+
+    if(hufftree->left)
+        path[depth-1] = 1;
+
+    // print root after spacing
+    printf("\n");
+
+    for(int i=0; i<depth-1; i++)
+    {
+        if(i == depth-2)
+            printf("+");
+        else if(path[i])
+            printf("|");
+        else
+            printf(" ");
+
+        for(int j=1; j<SPACE; j++)
+            if(i < depth-2)
+                printf(" ");
+            else
+                printf("-");
+    }
+
+    if(hufftree->ele > 21 && hufftree->ele < 127)
+        printf("%d(%c)\n", hufftree->key, hufftree->ele);
+    
+    else
+        printf("%d<%d>\n", hufftree->key, hufftree->ele);
+
+    // vertical spacers below
+    for(int i=0; i<depth; i++)
+    {
+        if(path[i])
+            printf("|");
+        else
+            printf(" ");
+
+        for(int j=1; j<SPACE; j++)
+            printf(" ");
+    }
+
+    // go to left node
+    treeprint(hufftree->left, depth, path, 0, inputdepth);
+}

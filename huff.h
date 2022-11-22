@@ -22,6 +22,8 @@
 #define MAXHCODE 32         //Set maximum huffman code to 32 bit
 #endif
 
+#define SPACE 5
+
 #define MEMALLOCERR() {\
 fprintf(stderr, "sbc: Failed to allocate memory. \n");\
 exit(-1);\
@@ -77,3 +79,5 @@ void treecheck(node *hufftree);
 void comp(FILE *in, char *name);
 void decomp(FILE *in, char *name);
 node *tbltoht();
+void drawhufftree(FILE *in);
+void treeprint(node *hufftree, int depth, char *path, int right, int inputdepth);

@@ -139,6 +139,18 @@ int main(int argc, char** argv) {
 
         comp(tempfile, argv[2]);
     }
+    else if(!strcmp("-t", argv[1])) {
+        if(argc != 3) {
+            fprintf(stderr, "shc: Incorrect argument format\n");
+            exit(-1);
+        }
+        
+        FILE *input = fopen(argv[2], "rb");
+
+        drawhufftree(input);
+
+        fclose(input);
+    }
     else {
         printf("shc: Invalid operation: \"%s\"\n", argv[1]);
     }
