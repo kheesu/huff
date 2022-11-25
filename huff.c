@@ -106,8 +106,12 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
     node **ntemp0, **ntemp1;
     
     while(1) {
+        //If arr0 is empty
         if(*size0 == 0) {
+            //If arr0 is empty and arr1 has only one element (huffman tree is finished) return
             if(*size1 == 1) return;
+
+            //Otherwise extract two members from arr1 and adds them to a new subtree and reinsert
 
             ntemp0 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
             ntemp1 = extract(arr1, size1, sizeof(node*), *nodeptrcmp);
@@ -120,6 +124,7 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
 
             insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
         }
+        //If arr1 is empty (when going through the loop the first time) extract two members from arr0 and attach to a tree and insert to arr1
         else if(*size1 == 0) {
             fdtemp0 = extract(arr0, size0, sizeof(freqdict), *freqcmp);
             fdtemp1 = extract(arr0, size0, sizeof(freqdict), *freqcmp);
@@ -136,8 +141,9 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
 
             insert(arr1, size1, sizeof(node*), *nodeptrcmp, &new);
         }
+        //If both arr0 and arr1 are populated
         else {
-            //for(int i = 0; i < *size1; i++) printf("%d %d\n", arr1[i]->key, arr1[i]->ele);
+            //Compares the front of both arr0 and arr1 and create new subtree with the smallest member as children
             if(arr0[0].freq <= arr1[0]->key) {
                 fdtemp0 = extract(arr0, size0, sizeof(freqdict), *freqcmp);
 
@@ -434,7 +440,8 @@ node *tbltoht() {
     }
     size_t dictlen = unique_characters;
     
-    for(int i = 0, j = 0; i < MAXCHAR; i++) {                           //Create dictionary of used chararcters
+    //Create dictionary of used chararcters
+    for(int i = 0, j = 0; i < MAXCHAR; i++) {                           
         if(freqtable[i] != 0) {
             dict[j].ele = i;
             dict[j++].freq = freqtable[i];

@@ -3,11 +3,14 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <string.h>
+
+//If compiling for Windows environment, import libraries to ensure compatibility
 #ifdef _WIN32
 #include <io.h>
 #include <fcntl.h>
 #endif
 
+//When ASCIIONLY is defined through compiler options, set MAXCHAR to 128
 #ifdef ASCIIONLY
 #define MAXCHAR 128
 #else
@@ -36,12 +39,14 @@ fprintf(stderr, "sbc: Failed to read file.\n");\
 exit(-1);\
 }
 
+//Structure that contains both the element and the frequency of the element
 typedef struct freqdict {
     unsigned int freq;                      //Frequency of the value
     unsigned char ele;                      //The element i.e. the 8 bit value it is representing
 
 } freqdict;
 
+//Node of tree data structure
 typedef struct node
 {
     unsigned int key;                       //Same as freq

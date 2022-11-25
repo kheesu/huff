@@ -4,9 +4,9 @@
 unsigned int freqtable[MAXCHAR] = {0};                  //Table that stores frequency of each characters
 char *encodetable[MAXCHAR] = {0};                       //Table that stores the huffman code for each character in string form
 
-//unsigned long long int number = 0;            
 //Used with the debug function treecheck()
 //Disabled for release
+//unsigned long long int number = 0;            
 
 //Measured file size of original file before compression
 unsigned long long fsize = 0;                           
@@ -29,7 +29,7 @@ int main(int argc, char** argv) {
             fprintf(stderr, "shc: Provide input file as argument\n");
             exit(0);
         }
-        //If too much arguments are provided
+        //If too many arguments are provided
         else if(argc > 5) {
             fprintf(stderr, "shc: Too many arguments\n");
             exit(0);
@@ -82,11 +82,14 @@ int main(int argc, char** argv) {
         fclose(text);
 
     }
+    //If decompression flag -d is provided
     else if(!strcmp("-d", argv[1])) {
+        //If too few arguments are provided
         if(argc < 3) {
             printf("shc: Provide input file as argument\n");
             exit(0);
         }
+        //If too many arguments are provided
         else if(argc > 4) {
             printf("shc: Too many arguments\n");
             exit(0);
@@ -97,11 +100,13 @@ int main(int argc, char** argv) {
         if(errno != 0) {
             FREADERR();
         }
-        
-        if(argc == 4 && !strcmp("-stdout", argv[3])) {                      //Taking advantage of short circuiting to prevent a segfault when accessing argv[3]
+
+        //If stdout flag -stdout is given write to stdout
+        //Taking advantage of short circuiting to prevent a segfault when accessing argv[3]
+        if(argc == 4 && !strcmp("-stdout", argv[3])) {                      
             decomp(comp, NULL);
         }
-
+        //If no extract filename is given save to file with the same name with .shc file extension removed
         else if(argc == 3) {
             char *fname = calloc(strlen(argv[2]) + 1, sizeof(char));
             if(fname == NULL) {
@@ -122,12 +127,15 @@ int main(int argc, char** argv) {
             decomp(comp, fname);
             free(fname);
         }
+        //Write the decompressed file to provided filename
         else {
             decomp(comp, argv[3]); 
         }
         fclose(comp);
     }
+    //If stdin compression flag - is provided
     else if(!strcmp("-", argv[1])) {
+        //If incorrect number of arguments are given
         if(argc != 3) {
             fprintf(stderr, "shc: Incorrect arguments\n");
             exit(-1);
@@ -150,7 +158,9 @@ int main(int argc, char** argv) {
 
         comp(tempfile, argv[2]);
     }
+    //If tree printing flag -f is provided
     else if(!strcmp("-t", argv[1])) {
+        //If incorrect number of arguments are provided
         if(argc != 3) {
             fprintf(stderr, "shc: Incorrect argument format\n");
             exit(-1);
@@ -162,8 +172,9 @@ int main(int argc, char** argv) {
 
         fclose(input);
     }
+    //Anything else is invalid operation
     else {
-        printf("shc: Invalid operation: \"%s\"\n", argv[1]);
+        fprintf(stderr, "shc: Invalid operation: \"%s\"\n", argv[1]);
     }
 
     return 0;
