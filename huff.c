@@ -3,8 +3,10 @@ extern unsigned int freqtable[MAXCHAR];
 extern char *encodetable[MAXCHAR];
 extern unsigned long long int number;
 extern unsigned long long fsize;
+extern unsigned long long csize;
 
-void char_dist(FILE* in) {                   //Finds out distribution of characters in file
+//Finds out distribution of characters in file
+void char_dist(FILE* in) {
     size_t size;
 
     char* buff = calloc(sizeof(char), BUFFSIZE);
@@ -36,6 +38,7 @@ void char_dist(FILE* in) {                   //Finds out distribution of charact
     free(buff);
 }
 
+//Finds out distribution of characters of file input through stdin
 void stdin_char_dist(FILE *temp) {
     size_t size;
 
@@ -66,11 +69,15 @@ void stdin_char_dist(FILE *temp) {
     free(buff);
 }
 
+//Creates new subtree with both left and right children and returns pointer to parent
 node *newsubtree() {
+
+    //Create parent node
     node *p = calloc(1, sizeof(node));
     if(p == NULL) {
         MEMALLOCERR();
     }
+    //Create first child and manually set left and right pointer to null
     node *c0 = calloc(1, sizeof(node));
     if(c0 == NULL) {
         MEMALLOCERR();
@@ -78,6 +85,7 @@ node *newsubtree() {
     c0->left = NULL;
     c0->right = NULL;
 
+    //Create second child and manually set left and right pointer to null
     node *c1 = calloc(1, sizeof(node));
     if(c1 == NULL) {
         MEMALLOCERR();
@@ -85,12 +93,14 @@ node *newsubtree() {
     c1->left = NULL;
     c1->right = NULL;
 
+    //Assign children to parent
     p->left = c0;
     p->right = c1;
 
     return p;
 }
 
+//Builds huffman tree of arr0 using auxiliary array arr1
 void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
     freqdict *fdtemp0, *fdtemp1;
     node **ntemp0, **ntemp1;
@@ -230,7 +240,9 @@ void buildht(freqdict *arr0, size_t *size0, node **arr1, size_t *size1) {
     
 }
 
+//Create huffman code recursively by traversing the tree and appending 0 and 1 for left and right child
 void encode(node *hufftree, char *code, unsigned int len) {
+    //Abort if current code goes over MAXHCODE
     if(len > MAXHCODE) {
         fprintf(stderr, "Code exceeds limit. Aborting...\n");
         exit(-1);
@@ -271,6 +283,8 @@ void treecheck(node *hufftree) {
     treecheck(hufftree->right);
 }
 */
+
+//Compress file
 void comp(FILE *in, char *name) {
     
     errno = 0;
@@ -307,6 +321,7 @@ void comp(FILE *in, char *name) {
                 if(bitpos == 8) {
                     bitpos = 0;
                     fputc(outbyte, out);
+                    csize++;
                     outbyte = 0;
                 }
             }
@@ -320,11 +335,21 @@ void comp(FILE *in, char *name) {
 
     fclose(out);
     free(buff);
+
+    //Print compression info to stderr
+    fprintf(stderr, "\
+    Before compression: %lu \n\
+    After compression: %lu \n\
+    Compression ratio : %.2f\n", fsize, csize, ((double)fsize / (double)csize));
 }
 
+//Decompresses file and writes to file *name
+//If *name is NULL, write to stdout
 void decomp(FILE *in, char *name) {
     FILE *out;
-    if(name) {                              //Checks if name is null pointer, if so set out to stdout
+
+    //Checks if name is null pointer, if so set out to stdout
+    if(name) {                              
         errno = 0;
         out = fopen(name, "wb");
         if(errno != 0) {
@@ -332,12 +357,14 @@ void decomp(FILE *in, char *name) {
         }
     }
     else {
+        //To ensure compatibility with Windows. However, untested if it works because couldn't find proper tar binary for Windows
         #ifdef _WIN32
         _setmode(_fileno(stdout), _O_BINARY);
         #endif
         out = stdout;
     }
     
+    //Check if file header is correct
     unsigned char identifier[5] = {0};
     fread(identifier, sizeof(unsigned char), 5, in);
     if(identifier[0] != 7 && identifier[1] != 'S' && identifier[2] != 'H' && identifier[3] != 'C') {
@@ -349,10 +376,13 @@ void decomp(FILE *in, char *name) {
     if(identifier[4] == 0) maxchar = 256;
     else maxchar = 128;
 
+    //Read original file size
     fread(&fsize, sizeof(unsigned long long), 1, in);
 
+    //Read frequency table used to generate huffman code
     fread(freqtable, sizeof(unsigned int), maxchar, in);
 
+    //Create huffman tree from table
     node *hufftree = tbltoht();
     size_t size;
 
@@ -363,6 +393,8 @@ void decomp(FILE *in, char *name) {
 
     unsigned char c;
     node *hp = hufftree;
+
+    //Read data in chunks using buffer and decode
     do{
         size = fread(buff, sizeof(char), BUFFSIZE, in);
         if(ferror(in)) {
@@ -370,6 +402,8 @@ void decomp(FILE *in, char *name) {
         } 
         for(int i = 0; i < size; i++) {
             c = buff[i];
+
+            //For each byte in file, check the most significant bit by performing AND operation with 0b10000000 (128) and shift left by 1 bit
             for(int j = 0; j < 8; j++) {
                 if(c & 128) hp = hp->right;
                 else hp = hp->left;
@@ -387,6 +421,7 @@ void decomp(FILE *in, char *name) {
     free(buff);
 }
 
+//Create huffman tree from frequency table
 node *tbltoht() {
     unsigned int unique_characters = 0;
     for(int i = 0; i < MAXCHAR; i++) {

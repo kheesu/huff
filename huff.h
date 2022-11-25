@@ -14,6 +14,7 @@
 #define MAXCHAR 256
 #endif
 
+//Following definitions are guarded to allow modification through compiler flags
 #ifndef BUFFSIZE
 #define BUFFSIZE 1024 * 1024 * 4 // 4MiB
 #endif
@@ -24,10 +25,12 @@
 
 #define SPACE 5
 
+//Macro for raisng memory allocation error
 #define MEMALLOCERR() {\
 fprintf(stderr, "sbc: Failed to allocate memory. \n");\
 exit(-1);\
 }
+//Macro for raising fread error
 #define FREADERR() {\
 fprintf(stderr, "sbc: Failed to read file.\n");\
 exit(-1);\

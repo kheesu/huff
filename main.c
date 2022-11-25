@@ -3,23 +3,33 @@
 //Globals
 unsigned int freqtable[MAXCHAR] = {0};                  //Table that stores frequency of each characters
 char *encodetable[MAXCHAR] = {0};                       //Table that stores the huffman code for each character in string form
+
 //unsigned long long int number = 0;            
 //Used with the debug function treecheck()
 //Disabled for release
-unsigned long long fsize = 0;                           //Measured file size of original file before compression
+
+//Measured file size of original file before compression
+unsigned long long fsize = 0;                           
+//Variable to store compressed data size to display compression ratio
+unsigned long long csize = 0; 
 
 int main(int argc, char** argv) {
 //Could use argp.h to get better arguments parsing but decided to minimize external library use
-    if(argc == 1) {
+
+//Exit if no arguments are provieded
+    if(argc == 1) {             
         fprintf(stderr, "shc: Provide input file as argument\n");
         exit(0);
     }
 
+    //If the compression flag -c is provided
     if(!strcmp("-c", argv[1])) {
+        //If too few arguments are provided
         if(argc < 3) {
             fprintf(stderr, "shc: Provide input file as argument\n");
             exit(0);
         }
+        //If too much arguments are provided
         else if(argc > 5) {
             fprintf(stderr, "shc: Too many arguments\n");
             exit(0);
@@ -27,8 +37,9 @@ int main(int argc, char** argv) {
 
         FILE* text;
         errno = 0;
+        //Open filename provided as argument in binary mode
         text = fopen(argv[2], "rb");
-        if(errno != 0) {
+        if(errno != 0) {        
             FREADERR();
         }
 
