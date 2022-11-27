@@ -16,6 +16,7 @@ Use - to compress from stdin
 
 Use -d flag to decompress and add -stdout in place of output file name to output to stdout
 
+Use -t flag to print the Huffman tree of compressed files
 ```
 hsu@TREEHOUSE:~$ ls -l
 total 1252
@@ -52,6 +53,34 @@ total 16
 -rw-r--r-- 1 hsu hsu  635 Nov 21 18:42 file1
 -rw-r--r-- 1 hsu hsu 2982 Nov 21 18:43 files.tar.shc
 drwxr-xr-x 9 hsu hsu 4096 Nov 21 13:11 source
+```
+
+```
+hsu@TREEHOUSE:~$ shc -c text.txt
+    Before compression: 448821
+    After compression: 254373
+    Compression ratio : 1.76
+hsu@TREEHOUSE:~$ shc -t text.txt.shc
+input the depth of the tree : 5
+
+               +----40215<0>
+               |    |
+          +----77195<0>
+          |    |
+          |    +----36980<0>
+          |         |
+     +----148760<0>
+     |    |
+     |    +----71565( )
+     |
++----265976<0>
+|    |
+|    |         +----32240<0>
+|    |         |    |
+|    |    +----62028<0>
+|    |    |    |
+|    |    |    +----29788(t)
+|    |    |         |
 ```
 
 ## Details on file header
