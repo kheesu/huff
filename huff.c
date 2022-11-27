@@ -344,8 +344,8 @@ void comp(FILE *in, char *name) {
 
     //Print compression info to stderr
     fprintf(stderr, "\
-    Before compression: %lu \n\
-    After compression: %lu \n\
+    Before compression: %llu \n\
+    After compression: %llu \n\
     Compression ratio : %.2f\n", fsize, csize, ((double)fsize / (double)csize));
 }
 
@@ -425,6 +425,7 @@ void decomp(FILE *in, char *name) {
     }
     while(size == BUFFSIZE);
     free(buff);
+    cleantree(hufftree);
 }
 
 //Create huffman tree from frequency table
@@ -457,7 +458,11 @@ node *tbltoht() {
     size_t htsize = 0;
     buildht(dict, &dictlen, hufftree, &htsize);
 
-    return *hufftree;
+    free(dict);
+    node *result = *hufftree;
+    free(hufftree);
+
+    return result;
 }
 
 //primary fuction
@@ -489,6 +494,8 @@ void drawhufftree(FILE *in)
     
     //initial depth is 0
     treeprint(tree, 0, path, 0, inputdepth);
+
+    cleantree(tree);
 }
 
 void treeprint(node *hufftree, int depth, char *path, int right, int inputdepth)
@@ -558,4 +565,65 @@ void treeprint(node *hufftree, int depth, char *path, int right, int inputdepth)
 
     // go to left node
     treeprint(hufftree->left, depth, path, 0, inputdepth);
+}
+
+int isprintable(unsigned char var) {
+    return (var > 21 && var < 127) ? 1 : 0;
+}
+
+int searchhuffcode(node *hufftree, char *code, unsigned int len, unsigned char target) {
+    int result = 0;
+    //Abort if current code goes over MAXHCODE
+    if(len > MAXHCODE) {
+        fprintf(stderr, "Code exceeds limit. Aborting...\n");
+        exit(-1);
+    }
+
+    if(hufftree->isleaf && hufftree->ele == target) {
+        code[len] = '\0';
+        if(isprintable(hufftree->ele))
+            fprintf(stdout, "The huffman code corresponding to the character %c is : %s\n", hufftree->ele, code);
+        
+        else
+            fprintf(stdout, "The huffman code corresponding to the value %d is : %s\n", hufftree->ele, code);
+
+        free(code);
+        return 1;
+    }
+    else if(hufftree->isleaf) {
+        free(code);
+        return 0;
+    }
+
+    char *new0 = calloc(MAXHCODE, sizeof(char));
+    if(new0 == NULL) {
+        MEMALLOCERR();
+    }
+    char *new1 = calloc(MAXHCODE, sizeof(char));
+    if(new1 == NULL) {
+        MEMALLOCERR();
+    }
+    
+    memcpy(new0, code, MAXHCODE);
+    memcpy(new1, code, MAXHCODE);
+    free(code);
+    new0[len] = '0';
+    result |= searchhuffcode(hufftree->left, new0, len + 1, target);
+    new1[len] = '1';
+    result |= searchhuffcode(hufftree->right, new1, len + 1, target);
+
+    return result;
+}
+
+void cleantree(node *tree) {
+    if(tree == NULL) return;
+    if(tree->isleaf) {
+        free(tree);
+        return;
+    }
+    cleantree(tree->left);
+    cleantree(tree->right);
+
+    free(tree);
+    return;
 }

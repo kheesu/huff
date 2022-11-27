@@ -89,3 +89,6 @@ void decomp(FILE *in, char *name);
 node *tbltoht();
 void drawhufftree(FILE *in);
 void treeprint(node *hufftree, int depth, char *path, int right, int inputdepth);
+int isprintable(unsigned char var);
+int searchhuffcode(node *hufftree, char *code, unsigned int len, unsigned char target);
+void cleantree(node *tree);

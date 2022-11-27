@@ -51,7 +51,8 @@ int main(int argc, char** argv) {
             MEMALLOCERR();
         }               
         unsigned int len = 0;
-        encode(tbltoht(), code, len);
+        node *tree = tbltoht();
+        encode(tree, code, len);
 
         if(argc == 3) {
             char *outname = calloc(strlen(argv[2]) + 5, sizeof(char));
@@ -80,7 +81,7 @@ int main(int argc, char** argv) {
         }
 
         fclose(text);
-
+        cleantree(tree);
     }
     //If decompression flag -d is provided
     else if(!strcmp("-d", argv[1])) {
@@ -154,9 +155,10 @@ int main(int argc, char** argv) {
             MEMALLOCERR();
         }               
         unsigned int len = 0;
-        encode(tbltoht(), code, len);
-
+        node *tree = tbltoht();
+        encode(tree, code, len);
         comp(tempfile, argv[2]);
+        cleantree(tree);
     }
     //If tree printing flag -f is provided
     else if(!strcmp("-t", argv[1])) {
@@ -166,11 +168,81 @@ int main(int argc, char** argv) {
             exit(-1);
         }
         
+        errno = 0;
         FILE *input = fopen(argv[2], "rb");
+        if(errno != 0) {
+            FREADERR();
+        }
 
         drawhufftree(input);
 
         fclose(input);
+    }
+    else if(!strcmp("-q", argv[1])) {
+
+        long temp = -1;
+        char *err;
+        errno = 0;
+
+        if(argc < 3 || argc > 4) {
+            fprintf(stderr, "shc: Incorrect argument format\n");
+            exit(-1);
+        }
+
+        if(argc == 3) {
+            fprintf(stdout, "Enter query in decimal : ");
+
+            char input[256];
+            if(fgets(input, 256, stdin) != NULL) {
+                
+                temp = strtol(input, &err, 10);
+                if(errno == ERANGE) {
+                    fprintf(stderr, "shc: Invalid input\n");
+                    exit(-1);
+                }
+            }
+        }
+        else if(argc == 4) {
+            temp = strtol(argv[3], &err, 10);
+            if(temp < 0 || temp > 256 || errno == ERANGE) {
+                fprintf(stderr, "shc: Invalid input\n");
+                exit(-1);
+            }
+        }
+
+        errno = 0;
+        FILE *input = fopen(argv[2], "rb");
+        if(errno != 0) {
+            FREADERR();
+        }
+
+        unsigned char identifier[5] = {0};
+        fread(identifier, sizeof(unsigned char), 5, input);
+        if(identifier[0] != 7 && identifier[1] != 'S' && identifier[2] != 'H' && identifier[3] != 'C') {
+            fprintf(stderr, "shc: Incorrect file format\n");
+            exit(-1);
+        }
+
+        int maxchar;
+        if(identifier[4] == 0) maxchar = 256;
+        else maxchar = 128;
+
+        fread(&fsize, sizeof(unsigned long long), 1, input);
+
+        fread(freqtable, sizeof(unsigned int), maxchar, input);
+
+        node *tree = tbltoht();
+
+        char *code = calloc(MAXHCODE, sizeof(char));     
+        if(code == NULL) {
+            MEMALLOCERR();
+        }
+
+        if(!searchhuffcode(tree, code, 0, (unsigned char)temp)) {
+            fprintf(stdout, "shc: No result found\n");
+        }
+
+        cleantree(tree);
     }
     //Anything else is invalid operation
     else {
