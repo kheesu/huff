@@ -545,7 +545,7 @@ void treeprint(node *hufftree, int depth, char *path, int right, int inputdepth)
                 printf("-");
     }
 
-    if(hufftree->ele > 21 && hufftree->ele < 127)
+    if(hufftree->ele > 33 && hufftree->ele < 127)
         printf("%d(%c)\n", hufftree->key, hufftree->ele);
     
     else
