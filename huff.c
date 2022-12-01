@@ -568,7 +568,7 @@ void treeprint(node *hufftree, int depth, char *path, int right, int inputdepth)
 }
 
 int isprintable(unsigned char var) {
-    return (var > 21 && var < 127) ? 1 : 0;
+    return (var > 31 && var < 127) ? 1 : 0;
 }
 
 int searchhuffcode(node *hufftree, char *code, unsigned int len, unsigned char target) {
