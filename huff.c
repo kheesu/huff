@@ -18,8 +18,8 @@ void char_dist(FILE* in) {
         size = fread(buff, sizeof(char), BUFFSIZE, in);
         fsize += size;
 
-        if(fsize == 0) {
-            fprintf(stderr, "shc: Empty file detected: Compression not neccessary\n");
+        if(fsize <= 1) {
+            fprintf(stderr, "shc: Input file too small: Compression not neccessary\n");
             exit(0);
         }
 
@@ -52,8 +52,8 @@ void stdin_char_dist(FILE *temp) {
         fwrite(buff, sizeof(char), size, temp);
         fsize += size;
 
-        if(fsize == 0) {
-            fprintf(stderr, "shc: Empty input detected: Compression not neccessary\n");
+        if(fsize <= 1) {
+            fprintf(stderr, "shc: Input file too small: Compression not neccessary\n");
             exit(0);
         }
         for(int i = 0; i < size; i++) {
