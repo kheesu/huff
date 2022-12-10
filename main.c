@@ -43,6 +43,7 @@ int main(int argc, char** argv) {
             FREADERR();
         }
 
+        //Fill out freqtable
         char_dist(text);
         fclose(text);
 
@@ -178,6 +179,7 @@ int main(int argc, char** argv) {
 
         fclose(input);
     }
+    //If query flag -q is provided
     else if(!strcmp("-q", argv[1])) {
 
         long temp = -1;
@@ -188,7 +190,7 @@ int main(int argc, char** argv) {
             fprintf(stderr, "shc: Incorrect argument format\n");
             exit(-1);
         }
-
+        //Query not in argument
         if(argc == 3) {
             fprintf(stdout, "Enter query in decimal : ");
 
@@ -200,8 +202,13 @@ int main(int argc, char** argv) {
                     fprintf(stderr, "shc: Invalid input\n");
                     exit(-1);
                 }
+
+                if(temp > 255) {
+                    fprintf(stderr, "shc: Invalid input\n");
+                }
             }
         }
+        //Query in argument
         else if(argc == 4) {
             temp = strtol(argv[3], &err, 10);
             if(temp < 0 || temp > 256 || errno == ERANGE) {
@@ -209,6 +216,8 @@ int main(int argc, char** argv) {
                 exit(-1);
             }
         }
+
+        //Following code block is copied from decomp function
 
         errno = 0;
         FILE *input = fopen(argv[2], "rb");
@@ -227,10 +236,13 @@ int main(int argc, char** argv) {
         if(identifier[4] == 0) maxchar = 256;
         else maxchar = 128;
 
+        //Read original file size
         fread(&fsize, sizeof(unsigned long long), 1, input);
 
+        //Read frequecny table
         fread(freqtable, sizeof(unsigned int), maxchar, input);
 
+        //Build huffman tree from frequency table
         node *tree = tbltoht();
 
         char *code = calloc(MAXHCODE, sizeof(char));     

@@ -615,6 +615,7 @@ int searchhuffcode(node *hufftree, char *code, unsigned int len, unsigned char t
     return result;
 }
 
+//Function for freeing entire tree
 void cleantree(node *tree) {
     if(tree == NULL) return;
     if(tree->isleaf) {

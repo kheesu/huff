@@ -1,5 +1,5 @@
 CC=gcc
-CCFLAGS= -Wall -O2 -I.
+CCFLAGS= -Wall -O2 -I. -s
 HEAD = huff.h
 O = main.o huff.o heap.o 
 

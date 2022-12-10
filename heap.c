@@ -1,6 +1,6 @@
 #include "huff.h"
 
-//Swap two generic variable of same type
+//Swap two variable of same type
 void swap(void * a, void* b, size_t bytes) {
     char *temp = calloc(sizeof(char), bytes);
 
